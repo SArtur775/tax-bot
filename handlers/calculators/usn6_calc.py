@@ -5,6 +5,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from keyboards.reply import get_main_menu
 from keyboards.inline import get_callback_btns
+from config import db
 
 usn6_router = Router()
 
@@ -31,6 +32,19 @@ async def calculate_usn6(message: Message, state: FSMContext):
         # Расчет налога УСН 6%
         tax = income * 0.06
         net_income = income - tax
+        
+        # Сохраняем расчет в базу
+        calculation = await db.save_calculation(
+            user_id=message.from_user.id,
+            calc_type="usn6",
+            income=income,
+            expenses=0,
+            result_data={
+                "tax": tax,
+                "net_income": net_income,
+                "calculation_type": "УСН 6%"
+            }
+        )
         
         # Основной результат
         await message.answer(

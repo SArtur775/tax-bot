@@ -5,6 +5,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from keyboards.reply import get_main_menu
 from keyboards.inline import get_callback_btns
+from config import db  # Импортируем базу данных из config.py
 
 ndfl_router = Router()
 
@@ -31,6 +32,19 @@ async def calculate_ndfl(message: Message, state: FSMContext):
         # Расчет налога
         tax = income * 0.13
         net_income = income - tax
+        
+        # Сохраняем расчет в базу
+        calculation = await db.save_calculation(
+            user_id=message.from_user.id,
+            calc_type="ndfl",
+            income=income,
+            expenses=0,
+            result_data={
+                "tax": tax,
+                "net_income": net_income,
+                "calculation_type": "НДФЛ 13%"
+            }
+        )
         
         # Основной результат
         await message.answer(

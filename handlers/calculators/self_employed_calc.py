@@ -5,6 +5,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from keyboards.reply import get_main_menu
 from keyboards.inline import get_callback_btns
+from config import db
 
 self_employed_router = Router()
 
@@ -73,6 +74,27 @@ async def calculate_self_employed(message: Message, state: FSMContext):
         if annual_income > 2400000:
             limit_warning = f"⚠️ <b>Внимание:</b> Годовой доход ({annual_income:,.0f}₽) превышает лимит для самозанятых (2.4 млн ₽/год)\n\n"
         
+        # Сохраняем расчет в базу
+        calculation = await db.save_calculation(
+            user_id=message.from_user.id,
+            calc_type="self_employed",
+            income=income,
+            expenses=0,
+            result_data={
+                "tax": tax,
+                "net_income": net_income,
+                "tax_rate": tax_rate,
+                "client_type": client_type,
+                "annual_income": annual_income,
+                "limit_warning": annual_income > 2400000,
+                "calculation_type": "Самозанятый"
+            },
+            additional_data={
+                "client_type": client_type,
+                "tax_rate": tax_rate
+            }
+        )
+        
         await message.answer(
             f"👤 <b>Результат расчета для самозанятых:</b>\n\n"
             f"{limit_warning}"
@@ -84,7 +106,6 @@ async def calculate_self_employed(message: Message, state: FSMContext):
             f"<i>Налог уплачивается через приложение 'Мой налог'</i>"
         )
         
-        # ЭТОТ БЛОК НУЖНО ИЗМЕНИТЬ:
         keyboard = get_callback_btns(
             btns={
                 "🔄 Новый расчет": "new_self_employed",

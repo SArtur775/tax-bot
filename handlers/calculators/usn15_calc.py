@@ -5,6 +5,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from keyboards.reply import get_main_menu
 from keyboards.inline import get_callback_btns
+from config import db
 
 usn15_router = Router()
 
@@ -72,6 +73,22 @@ async def calculate_usn15(message: Message, state: FSMContext):
             tax_info = f"• <b>Налог 15%:</b> {tax:,.0f}₽\n"
             actual_tax = tax
             actual_net_income = net_income
+        
+        # Сохраняем расчет в базу
+        calculation = await db.save_calculation(
+            user_id=message.from_user.id,
+            calc_type="usn15",
+            income=income,
+            expenses=expenses,
+            result_data={
+                "tax_base": tax_base,
+                "tax": actual_tax,
+                "net_income": actual_net_income,
+                "min_tax": min_tax,
+                "calculation_type": "УСН 15%",
+                "tax_info": "минимальный налог" if tax < min_tax else "обычный налог"
+            }
+        )
         
         # Основной результат
         await message.answer(
