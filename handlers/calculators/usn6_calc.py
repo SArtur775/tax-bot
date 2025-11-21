@@ -15,7 +15,7 @@ async def start_usn6_calculator(message: Message, state: FSMContext):
         "📊 <b>Калькулятор УСН 6% (Доходы)</b>\n\n"
         "Введите ваш доход за квартал (в рублях):\n"
         "Пример: 300000",
-        parse_mode="HTML"
+        
     )
     await state.set_state(USN6States.waiting_for_income)
 
@@ -37,7 +37,7 @@ async def calculate_usn6(message: Message, state: FSMContext):
             f"• Налог 6%: {tax:,.0f}₽\n"
             f"• Чистый доход: {net_income:,.0f}₽\n\n"
             f"<i>Налог уплачивается ежеквартально</i>",
-            parse_mode="HTML"
+            
         )
         await state.clear()
         

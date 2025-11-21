@@ -7,7 +7,8 @@ from aiogram.fsm.context import FSMContext
 usn15_router = Router()
 
 class USN15States(StatesGroup):
-    waiting_for_data = State()
+    waiting_for_income = State()
+    waiting_for_expenses = State()
 
 @usn15_router.message(F.text == "УСН 15%")
 async def start_usn15_calculator(message: Message, state: FSMContext):
@@ -17,46 +18,72 @@ async def start_usn15_calculator(message: Message, state: FSMContext):
         "Пример: 500000",
         parse_mode="HTML"
     )
-    await state.set_state(USN15States.waiting_for_data)
-    await state.update_data(step="income")
+    await state.set_state(USN15States.waiting_for_income)
 
-@usn15_router.message(USN15States.waiting_for_data)
-async def calculate_usn15(message: Message, state: FSMContext):
-    user_data = await state.get_data()
-    
+@usn15_router.message(USN15States.waiting_for_income)
+async def process_income(message: Message, state: FSMContext):
     try:
-        if user_data.get("step") == "income":
-            income = float(message.text)
-            await state.update_data(income=income)
-            await message.answer(
-                "Теперь введите ваши расходы за квартал (в рублях):\n"
-                "Пример: 200000"
-            )
-            await state.update_data(step="expenses")
-        else:
-            expenses = float(message.text)
-            income = user_data["income"]
-            
-            if expenses >= income:
-                await message.answer("❌ Расходы не могут быть больше или равны доходам. Введите снова:")
-                return
-            
-            # Расчет налога УСН 15%
-            tax_base = income - expenses
-            tax = tax_base * 0.15
-            net_income = income - expenses - tax
-            
-            await message.answer(
-                f"📊 <b>Результат расчета УСН 15%:</b>\n\n"
-                f"• Доход за квартал: {income:,.0f}₽\n"
-                f"• Расходы за квартал: {expenses:,.0f}₽\n"
-                f"• Налоговая база: {tax_base:,.0f}₽\n"
-                f"• Налог 15%: {tax:,.0f}₽\n"
-                f"• Чистый доход: {net_income:,.0f}₽\n\n"
-                f"<i>Минимальный налог 1% от дохода: {income * 0.01:,.0f}₽</i>",
-                parse_mode="HTML"
-            )
-            await state.clear()
-            
+        income = float(message.text)
+        if income <= 0:
+            await message.answer("❌ Доход должен быть положительным числом. Введите снова:")
+            return
+        
+        await state.update_data(income=income)
+        await message.answer(
+            f"✅ Доход: {income:,.0f}₽\n\n"
+            "Теперь введите ваши расходы за квартал (в рублях):\n"
+            "Пример: 200000"
+        )
+        await state.set_state(USN15States.waiting_for_expenses)
+        
     except ValueError:
-        await message.answer("❌ Пожалуйста, введите число.")
+        await message.answer("❌ Пожалуйста, введите число. Пример: 500000")
+
+@usn15_router.message(USN15States.waiting_for_expenses)
+async def calculate_usn15(message: Message, state: FSMContext):
+    try:
+        expenses = float(message.text)
+        user_data = await state.get_data()
+        income = user_data['income']
+        
+        if expenses < 0:
+            await message.answer("❌ Расходы не могут быть отрицательными. Введите снова:")
+            return
+            
+        if expenses >= income:
+            await message.answer("❌ Расходы не могут быть больше или равны доходам. Введите снова:")
+            return
+        
+        # Расчет налога УСН 15%
+        tax_base = income - expenses
+        tax = tax_base * 0.15
+        net_income = income - expenses - tax
+        
+        # Минимальный налог (1% от доходов)
+        min_tax = income * 0.01
+        
+        tax_info = ""
+        if tax < min_tax:
+            tax_info = f"• <b>Минимальный налог 1%:</b> {min_tax:,.0f}₽ (применяется, так как он больше рассчитанного)\n"
+            actual_tax = min_tax
+            actual_net_income = income - expenses - min_tax
+        else:
+            tax_info = f"• <b>Налог 15%:</b> {tax:,.0f}₽\n"
+            actual_tax = tax
+            actual_net_income = net_income
+        
+        await message.answer(
+            f"📊 <b>Результат расчета УСН 15%:</b>\n\n"
+            f"• Доход за квартал: {income:,.0f}₽\n"
+            f"• Расходы за квартал: {expenses:,.0f}₽\n"
+            f"• Налоговая база: {tax_base:,.0f}₽\n"
+            f"{tax_info}"
+            f"• <b>Итоговый налог к уплате:</b> {actual_tax:,.0f}₽\n"
+            f"• <b>Чистый доход:</b> {actual_net_income:,.0f}₽\n\n"
+            f"<i>Налог уплачивается ежеквартально</i>",
+            parse_mode="HTML"
+        )
+        await state.clear()
+        
+    except ValueError:
+        await message.answer("❌ Пожалуйста, введите число. Пример: 200000")

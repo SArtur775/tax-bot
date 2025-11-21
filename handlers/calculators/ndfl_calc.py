@@ -15,7 +15,7 @@ async def start_ndfl_calculator(message: Message, state: FSMContext):
         "📊 <b>Калькулятор НДФЛ 13%</b>\n\n"
         "Введите ваш доход за месяц (в рублях):\n"
         "Пример: 100000",
-        parse_mode="HTML"
+        
     )
     await state.set_state(NDFLStates.waiting_for_income)
 
@@ -36,7 +36,7 @@ async def calculate_ndfl(message: Message, state: FSMContext):
             f"• Налог 13%: {tax:,.0f}₽\n"
             f"• Чистый доход: {net_income:,.0f}₽\n\n"
             f"<i>Налог уплачивается работодателем</i>",
-            parse_mode="HTML"
+            
         )
         await state.clear()
         

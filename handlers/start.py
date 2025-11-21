@@ -3,7 +3,7 @@
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
-from keyboards.main_menu import get_main_menu
+from keyboards.reply import get_main_reply_menu
 
 # Даем уникальное имя
 start_router = Router()  # ← ИМЕННО ТАК!
@@ -20,6 +20,6 @@ async def cmd_start(message: Message):
         "• 👤 Оптимизировать налоги для самозанятых\n"
         "• 🔔 Настроить напоминания\n\n"
         "Выберите раздел в меню ниже 👇",
-        reply_markup=get_main_menu(),
-        parse_mode="HTML"
+        reply_markup=get_main_reply_menu(),
+        
     )
