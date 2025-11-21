@@ -5,6 +5,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from keyboards.reply import get_main_menu
 from keyboards.inline import get_callback_btns
+from config import db
 
 comparison_router = Router()
 
@@ -121,6 +122,24 @@ async def calculate_comparison(message: Message, state: FSMContext):
         f"📈 <b>Экономия в год:</b> {best_system['yearly_saving']:,.0f}₽",
         reply_markup=get_main_menu()
     )
+    
+    # --- СОХРАНЕНИЕ В БАЗУ ДАННЫХ ---
+    try:
+        result_data = {
+            'results': results,
+            'best_system': best_system,
+            'activity_type': activity_type
+        }
+        await db.save_calculation(
+            user_id=message.from_user.id,
+            calc_type="comparison",
+            income=income,
+            expenses=expenses,
+            result_data=result_data
+        )
+    except Exception as e:
+        print(f"Ошибка сохранения сравнения: {e}")
+    # --- КОНЕЦ СОХРАНЕНИЯ ---
     
     await state.clear()
 

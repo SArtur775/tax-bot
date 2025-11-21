@@ -15,6 +15,7 @@ from handlers.calculators.usn15_calc import usn15_router
 from handlers.calculators.self_employed_calc import self_employed_router
 from handlers.comparison.tax_comparison import comparison_router
 from handlers.premium.premium_handlers import premium_router
+from handlers.history.history_handler import router as history_router
 
 # Импортируем базу данных из config
 from config import db
@@ -40,6 +41,7 @@ dp.include_router(usn15_router)
 dp.include_router(self_employed_router)
 dp.include_router(comparison_router)
 dp.include_router(premium_router)
+dp.include_router(history_router)
 
 async def main():
     logging.basicConfig(level=logging.INFO)
