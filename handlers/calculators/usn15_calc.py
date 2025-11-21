@@ -12,7 +12,7 @@ class USN15States(StatesGroup):
     waiting_for_income = State()
     waiting_for_expenses = State()
 
-@usn15_router.message(F.text == "📈 УСН 15%")  # ИЗМЕНИ ТЕКСТ
+@usn15_router.message(F.text == "📈 УСН 15%")
 async def start_usn15_calculator(message: Message, state: FSMContext):
     await message.answer(
         "📊 <b>Калькулятор УСН 15% (Доходы-Расходы)</b>\n\n"
@@ -55,10 +55,12 @@ async def calculate_usn15(message: Message, state: FSMContext):
             await message.answer("❌ Расходы не могут быть больше или равны доходам. Введите снова:")
             return
         
+        # Расчет налога УСН 15%
         tax_base = income - expenses
         tax = tax_base * 0.15
         net_income = income - expenses - tax
         
+        # Минимальный налог (1% от доходов)
         min_tax = income * 0.01
         
         tax_info = ""
@@ -71,6 +73,7 @@ async def calculate_usn15(message: Message, state: FSMContext):
             actual_tax = tax
             actual_net_income = net_income
         
+        # Основной результат
         await message.answer(
             f"📊 <b>Результат расчета УСН 15%:</b>\n\n"
             f"• Доход за квартал: {income:,.0f}₽\n"
@@ -82,11 +85,12 @@ async def calculate_usn15(message: Message, state: FSMContext):
             f"<i>Налог уплачивается ежеквартально</i>"
         )
         
+        # Монетизационное меню
         keyboard = get_callback_btns(
             btns={
-                "🔄 Новый расчет (бесплатно)": "new_usn15",
-                "📊 Сравнить системы (премиум)": "premium_compare", 
-                "💾 Сохранить историю (премиум)": "premium_save",
+                "🔄 Новый расчет": "new_usn15",
+                "📊 Сравнить системы": "compare_after_calc",
+                "💾 Сохранить (премиум)": "premium_save",
                 "🏠 В главное меню": "main_menu"
             },
             sizes=(2, 1, 1)

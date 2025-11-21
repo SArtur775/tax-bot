@@ -36,13 +36,31 @@ async def offer_premium(callback: CallbackQuery):
     )
     await callback.answer()
 
+# Обработчик для сравнения после расчета
+@premium_router.callback_query(F.data == "compare_after_calc")
+async def start_comparison_after_calc(callback: CallbackQuery):
+    from keyboards.inline import get_callback_btns
+    
+    keyboard = get_callback_btns(
+        btns={
+            "💼 Наемный работник": "employee",
+            "👨‍💼 Фрилансер/ИП": "freelancer", 
+            "🏢 Бизнес с расходами": "business",
+            "👤 Самозанятый": "self_employed"
+        },
+        sizes=(2, 2)
+    )
+    
+    await callback.message.answer(
+        "🔍 <b>Сравнение налоговых систем</b>\n\n"
+        "Выберите ваш тип деятельности:",
+        reply_markup=keyboard
+    )
+    await callback.answer()
+
 @premium_router.callback_query(F.data == "main_menu")
 async def back_to_main(callback: CallbackQuery):
-    await callback.message.answer("🎯 <b>Главное меню</b>")
-    await callback.message.answer(
-        "Выберите раздел:",
-        reply_markup=get_main_menu()
-    )
+    await callback.message.answer("📍 Возвращаемся в главное меню:", reply_markup=get_main_menu())
     await callback.answer()
 
 @premium_router.callback_query(F.data.startswith("new_"))

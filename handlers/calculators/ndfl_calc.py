@@ -11,7 +11,7 @@ ndfl_router = Router()
 class NDFLStates(StatesGroup):
     waiting_for_income = State()
 
-@ndfl_router.message(F.text == "💼 НДФЛ 13%")  # ИЗМЕНИ ТЕКСТ
+@ndfl_router.message(F.text == "💼 НДФЛ 13%")
 async def start_ndfl_calculator(message: Message, state: FSMContext):
     await message.answer(
         "📊 <b>Калькулятор НДФЛ 13%</b>\n\n"
@@ -28,9 +28,11 @@ async def calculate_ndfl(message: Message, state: FSMContext):
             await message.answer("❌ Доход должен быть положительным числом. Введите снова:")
             return
         
+        # Расчет налога
         tax = income * 0.13
         net_income = income - tax
         
+        # Основной результат
         await message.answer(
             f"📊 <b>Результат расчета НДФЛ:</b>\n\n"
             f"• Ваш доход: {income:,.0f}₽\n"
@@ -39,11 +41,12 @@ async def calculate_ndfl(message: Message, state: FSMContext):
             f"<i>Налог уплачивается работодателем</i>"
         )
         
+        # Монетизационное меню
         keyboard = get_callback_btns(
             btns={
-                "🔄 Новый расчет (бесплатно)": "new_ndfl",
-                "📊 Сравнить системы (премиум)": "premium_compare", 
-                "💾 Сохранить историю (премиум)": "premium_save",
+                "🔄 Новый расчет": "new_ndfl",
+                "📊 Сравнить системы": "compare_after_calc",
+                "💾 Сохранить (премиум)": "premium_save",
                 "🏠 В главное меню": "main_menu"
             },
             sizes=(2, 1, 1)

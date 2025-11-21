@@ -11,7 +11,7 @@ self_employed_router = Router()
 class SelfEmployedStates(StatesGroup):
     waiting_for_income_amount = State()
 
-@self_employed_router.message(F.text == "👤 Самозанятый")  # ИЗМЕНИ ТЕКСТ
+@self_employed_router.message(F.text == "👤 Самозанятый")
 async def start_self_employed_calculator(message: Message):
     keyboard = get_callback_btns(
         btns={
@@ -84,11 +84,12 @@ async def calculate_self_employed(message: Message, state: FSMContext):
             f"<i>Налог уплачивается через приложение 'Мой налог'</i>"
         )
         
+        # ЭТОТ БЛОК НУЖНО ИЗМЕНИТЬ:
         keyboard = get_callback_btns(
             btns={
-                "🔄 Новый расчет (бесплатно)": "new_self_employed",
-                "📊 Сравнить системы (премиум)": "premium_compare", 
-                "💾 Сохранить историю (премиум)": "premium_save",
+                "🔄 Новый расчет": "new_self_employed",
+                "📊 Сравнить системы": "compare_after_calc",
+                "💾 Сохранить (премиум)": "premium_save",
                 "🏠 В главное меню": "main_menu"
             },
             sizes=(2, 1, 1)

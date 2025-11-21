@@ -11,7 +11,7 @@ usn6_router = Router()
 class USN6States(StatesGroup):
     waiting_for_income = State()
 
-@usn6_router.message(F.text == "📊 УСН 6%")  # ИЗМЕНИ ТЕКСТ
+@usn6_router.message(F.text == "📊 УСН 6%")
 async def start_usn6_calculator(message: Message, state: FSMContext):
     await message.answer(
         "📊 <b>Калькулятор УСН 6% (Доходы)</b>\n\n"
@@ -28,9 +28,11 @@ async def calculate_usn6(message: Message, state: FSMContext):
             await message.answer("❌ Доход должен быть положительным числом. Введите снова:")
             return
         
+        # Расчет налога УСН 6%
         tax = income * 0.06
         net_income = income - tax
         
+        # Основной результат
         await message.answer(
             f"📊 <b>Результат расчета УСН 6%:</b>\n\n"
             f"• Доход за квартал: {income:,.0f}₽\n"
@@ -39,11 +41,12 @@ async def calculate_usn6(message: Message, state: FSMContext):
             f"<i>Налог уплачивается ежеквартально</i>"
         )
         
+        # Монетизационное меню
         keyboard = get_callback_btns(
             btns={
-                "🔄 Новый расчет (бесплатно)": "new_usn6",
-                "📊 Сравнить системы (премиум)": "premium_compare", 
-                "💾 Сохранить историю (премиум)": "premium_save",
+                "🔄 Новый расчет": "new_usn6",
+                "📊 Сравнить системы": "compare_after_calc",
+                "💾 Сохранить (премиум)": "premium_save",
                 "🏠 В главное меню": "main_menu"
             },
             sizes=(2, 1, 1)
