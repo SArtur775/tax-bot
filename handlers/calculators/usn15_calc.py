@@ -1,8 +1,10 @@
 # handlers/calculators/usn15_calc.py
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
+from keyboards.reply import get_main_menu
+from keyboards.inline import get_callback_btns
 
 usn15_router = Router()
 
@@ -10,13 +12,12 @@ class USN15States(StatesGroup):
     waiting_for_income = State()
     waiting_for_expenses = State()
 
-@usn15_router.message(F.text == "УСН 15%")
+@usn15_router.message(F.text == "📈 УСН 15%")  # ИЗМЕНИ ТЕКСТ
 async def start_usn15_calculator(message: Message, state: FSMContext):
     await message.answer(
         "📊 <b>Калькулятор УСН 15% (Доходы-Расходы)</b>\n\n"
         "Введите ваш доход за квартал (в рублях):\n"
-        "Пример: 500000",
-        parse_mode="HTML"
+        "Пример: 500000"
     )
     await state.set_state(USN15States.waiting_for_income)
 
@@ -54,12 +55,10 @@ async def calculate_usn15(message: Message, state: FSMContext):
             await message.answer("❌ Расходы не могут быть больше или равны доходам. Введите снова:")
             return
         
-        # Расчет налога УСН 15%
         tax_base = income - expenses
         tax = tax_base * 0.15
         net_income = income - expenses - tax
         
-        # Минимальный налог (1% от доходов)
         min_tax = income * 0.01
         
         tax_info = ""
@@ -80,9 +79,29 @@ async def calculate_usn15(message: Message, state: FSMContext):
             f"{tax_info}"
             f"• <b>Итоговый налог к уплате:</b> {actual_tax:,.0f}₽\n"
             f"• <b>Чистый доход:</b> {actual_net_income:,.0f}₽\n\n"
-            f"<i>Налог уплачивается ежеквартально</i>",
-            parse_mode="HTML"
+            f"<i>Налог уплачивается ежеквартально</i>"
         )
+        
+        keyboard = get_callback_btns(
+            btns={
+                "🔄 Новый расчет (бесплатно)": "new_usn15",
+                "📊 Сравнить системы (премиум)": "premium_compare", 
+                "💾 Сохранить историю (премиум)": "premium_save",
+                "🏠 В главное меню": "main_menu"
+            },
+            sizes=(2, 1, 1)
+        )
+
+        await message.answer(
+            "📊 <b>Расчет завершен!</b>\n\n"
+            "💡 <i>Хотите больше возможностей?</i>\n"
+            "• Сравнение всех налоговых систем\n"
+            "• Сохранение истории расчетов\n"
+            "• Персональные рекомендации\n\n"
+            "🔓 <b>Премиум-функции разблокированы</b>",
+            reply_markup=keyboard
+        )
+        
         await state.clear()
         
     except ValueError:

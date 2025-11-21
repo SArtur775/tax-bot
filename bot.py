@@ -13,6 +13,8 @@ from handlers.calculators.ndfl_calc import ndfl_router
 from handlers.calculators.usn6_calc import usn6_router
 from handlers.calculators.usn15_calc import usn15_router
 from handlers.calculators.self_employed_calc import self_employed_router
+from handlers.premium.premium_handlers import premium_router
+
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -30,13 +32,11 @@ dp.include_router(ndfl_router)
 dp.include_router(usn6_router)
 dp.include_router(usn15_router)
 dp.include_router(self_employed_router)
+dp.include_router(premium_router)
 
 async def main():
     logging.basicConfig(level=logging.INFO)
-    
-    # ВАЖНО: Удаляем вебхук и пропускаем старые сообщения
     await bot.delete_webhook(drop_pending_updates=True)
-    
     await dp.start_polling(bot)
 
 if __name__ == "__main__":

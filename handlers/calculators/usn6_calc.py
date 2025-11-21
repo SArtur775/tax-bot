@@ -1,21 +1,22 @@
 # handlers/calculators/usn6_calc.py
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
+from keyboards.reply import get_main_menu
+from keyboards.inline import get_callback_btns
 
 usn6_router = Router()
 
 class USN6States(StatesGroup):
     waiting_for_income = State()
 
-@usn6_router.message(F.text == "УСН 6%")
+@usn6_router.message(F.text == "📊 УСН 6%")  # ИЗМЕНИ ТЕКСТ
 async def start_usn6_calculator(message: Message, state: FSMContext):
     await message.answer(
         "📊 <b>Калькулятор УСН 6% (Доходы)</b>\n\n"
         "Введите ваш доход за квартал (в рублях):\n"
-        "Пример: 300000",
-        
+        "Пример: 300000"
     )
     await state.set_state(USN6States.waiting_for_income)
 
@@ -27,7 +28,6 @@ async def calculate_usn6(message: Message, state: FSMContext):
             await message.answer("❌ Доход должен быть положительным числом. Введите снова:")
             return
         
-        # Расчет налога УСН 6%
         tax = income * 0.06
         net_income = income - tax
         
@@ -36,9 +36,29 @@ async def calculate_usn6(message: Message, state: FSMContext):
             f"• Доход за квартал: {income:,.0f}₽\n"
             f"• Налог 6%: {tax:,.0f}₽\n"
             f"• Чистый доход: {net_income:,.0f}₽\n\n"
-            f"<i>Налог уплачивается ежеквартально</i>",
-            
+            f"<i>Налог уплачивается ежеквартально</i>"
         )
+        
+        keyboard = get_callback_btns(
+            btns={
+                "🔄 Новый расчет (бесплатно)": "new_usn6",
+                "📊 Сравнить системы (премиум)": "premium_compare", 
+                "💾 Сохранить историю (премиум)": "premium_save",
+                "🏠 В главное меню": "main_menu"
+            },
+            sizes=(2, 1, 1)
+        )
+
+        await message.answer(
+            "📊 <b>Расчет завершен!</b>\n\n"
+            "💡 <i>Хотите больше возможностей?</i>\n"
+            "• Сравнение всех налоговых систем\n"
+            "• Сохранение истории расчетов\n"
+            "• Персональные рекомендации\n\n"
+            "🔓 <b>Премиум-функции разблокированы</b>",
+            reply_markup=keyboard
+        )
+        
         await state.clear()
         
     except ValueError:

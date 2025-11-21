@@ -3,6 +3,7 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
+from keyboards.reply import get_main_menu
 from keyboards.inline import get_callback_btns
 
 self_employed_router = Router()
@@ -10,7 +11,7 @@ self_employed_router = Router()
 class SelfEmployedStates(StatesGroup):
     waiting_for_income_amount = State()
 
-@self_employed_router.message(F.text == "Самозанятый 4-6%")
+@self_employed_router.message(F.text == "👤 Самозанятый")  # ИЗМЕНИ ТЕКСТ
 async def start_self_employed_calculator(message: Message):
     keyboard = get_callback_btns(
         btns={
@@ -24,8 +25,7 @@ async def start_self_employed_calculator(message: Message):
     await message.answer(
         "👤 <b>Калькулятор для самозанятых</b>\n\n"
         "Выберите тип клиентов:",
-        reply_markup=keyboard,
-        parse_mode="HTML"
+        reply_markup=keyboard
     )
 
 @self_employed_router.callback_query(F.data.startswith("self_employed_"))
@@ -44,17 +44,14 @@ async def process_client_type(callback: CallbackQuery, state: FSMContext):
         f"💼 <b>Работа с {client_type}</b>\n"
         f"📊 Ставка налога: {tax_rate*100}%\n\n"
         "Введите ваш доход за месяц (в рублях):\n"
-        "Пример: 50000",
-        parse_mode="HTML"
+        "Пример: 50000"
     )
     
     await state.set_state(SelfEmployedStates.waiting_for_income_amount)
     await callback.answer()
 
-# ВАЖНО: Добавляем фильтр, чтобы игнорировать callback в состоянии ожидания числа
 @self_employed_router.message(SelfEmployedStates.waiting_for_income_amount)
 async def calculate_self_employed(message: Message, state: FSMContext):
-    # Игнорируем сообщения, которые не являются текстом с числом
     if not message.text:
         return
         
@@ -68,11 +65,9 @@ async def calculate_self_employed(message: Message, state: FSMContext):
         tax_rate = user_data['tax_rate']
         client_type = user_data['client_type']
         
-        # Расчет налога
         tax = income * tax_rate
         net_income = income - tax
         
-        # Проверка лимита (2.4 млн в год)
         annual_income = income * 12
         limit_warning = ""
         if annual_income > 2400000:
@@ -86,9 +81,29 @@ async def calculate_self_employed(message: Message, state: FSMContext):
             f"• Ставка налога: {tax_rate*100}%\n"
             f"• Налог к уплате: {tax:,.0f}₽\n"
             f"• Чистый доход: {net_income:,.0f}₽\n\n"
-            f"<i>Налог уплачивается через приложение 'Мой налог'</i>",
-            parse_mode="HTML"
+            f"<i>Налог уплачивается через приложение 'Мой налог'</i>"
         )
+        
+        keyboard = get_callback_btns(
+            btns={
+                "🔄 Новый расчет (бесплатно)": "new_self_employed",
+                "📊 Сравнить системы (премиум)": "premium_compare", 
+                "💾 Сохранить историю (премиум)": "premium_save",
+                "🏠 В главное меню": "main_menu"
+            },
+            sizes=(2, 1, 1)
+        )
+
+        await message.answer(
+            "📊 <b>Расчет завершен!</b>\n\n"
+            "💡 <i>Хотите больше возможностей?</i>\n"
+            "• Сравнение всех налоговых систем\n"
+            "• Сохранение истории расчетов\n"
+            "• Персональные рекомендации\n\n"
+            "🔓 <b>Премиум-функции разблокированы</b>",
+            reply_markup=keyboard
+        )
+        
         await state.clear()
         
     except ValueError:

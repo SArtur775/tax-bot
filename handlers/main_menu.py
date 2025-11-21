@@ -1,17 +1,17 @@
 # handlers/main_menu.py
 from aiogram import Router
 from aiogram.types import Message
-from keyboards.reply import get_calculators_reply_menu, get_main_reply_menu
+from keyboards.reply import get_calculators_menu, get_main_menu
 
 menu_router = Router()
 
-@menu_router.message(lambda message: message.text == "🔄 Калькулятор налогов")
+# ИЗМЕНИ ТЕКСТ НА НОВЫЙ
+@menu_router.message(lambda message: message.text == "🧮 Калькуляторы")
 async def handle_tax_calculator(message: Message):
     await message.answer(
         "📊 <b>Калькулятор налогов</b>\n\n"
         "Выберите систему налогообложения:",
-        reply_markup=get_calculators_reply_menu(),
-        
+        reply_markup=get_calculators_menu()
     )
 
 @menu_router.message(lambda message: message.text == "💰 Налоговые вычеты")
@@ -30,10 +30,10 @@ async def handle_self_employed(message: Message):
 async def handle_reminders(message: Message):
     await message.answer("🔔 <b>Напоминания</b>\n\nНастройте уведомления о:\n• Сроках сдачи отчетности\n• Уплате налогов\n• Изменениях в законодательстве")
 
-# ДОБАВЛЯЕМ ОБРАБОТЧИК КНОПКИ "НАЗАД"
-@menu_router.message(lambda message: message.text == "🔙 Назад в главное меню")
+@menu_router.message(lambda message: message.text == "🔙 Назад")
 async def handle_back_to_main(message: Message):
+    await message.answer("🎯 <b>Главное меню</b>")
     await message.answer(
-        "📍 Возвращаемся в главное меню:",
-        reply_markup=get_main_reply_menu()
+        "Выберите раздел:",
+        reply_markup=get_main_menu()
     )
